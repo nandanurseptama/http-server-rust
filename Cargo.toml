@@ -11,3 +11,6 @@ sea-orm = { version = "1.0.0-rc.5", features = [
         "runtime-tokio"
 ] }
 log = "0.4"
+
+[workspace]
+members = [".", "migration","entities"]
