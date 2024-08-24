@@ -1,8 +1,8 @@
 mod commons;
 mod controllers;
 mod requests;
-mod services;
 mod responses;
+mod services;
 use std::time::Duration;
 
 use actix_web::{middleware::Logger, App, HttpServer};
@@ -17,9 +17,9 @@ async fn main() -> std::io::Result<()> {
     let config = commons::config::Config::new();
 
     let jwt = commons::jwt::JWT::new(config.auth_token_secret, config.refresh_token_secret);
+    let aes: commons::aes::Aes = commons::aes::Aes::new(config.aes_key, config.aes_iv).unwrap();
 
-    let mut opt =
-        ConnectOptions::new(config.db_url);
+    let mut opt = ConnectOptions::new(config.db_url);
     opt.max_connections(100)
         .min_connections(5)
         .connect_timeout(Duration::from_secs(8))
@@ -37,6 +37,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(actix_web::web::Data::new(AuthService::new(
                 db.clone(),
                 jwt.clone(),
+                aes.clone(),
             )))
             .configure(controllers::auth_controller::config)
     })

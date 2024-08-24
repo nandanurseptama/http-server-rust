@@ -22,3 +22,7 @@ env_logger = "0.11.5"
 jsonwebtoken = "9.3.0"
 dotenv = "0.15.0"
 uuid = { version = "1.10.0", features = ["v4", "fast-rng", "macro-diagnostics"] }
+aes = "0.8.4"
+cipher = "0.4.4"
+hex = "0.4.3"
+cbc = "0.1.2"

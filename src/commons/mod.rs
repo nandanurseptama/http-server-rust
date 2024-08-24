@@ -1,5 +1,6 @@
 pub mod config;
 pub mod jwt;
+pub mod aes;
 
 #[derive(Debug, Clone)]
 pub struct Error {

@@ -8,4 +8,5 @@ mod auth_service;
 pub struct AuthService {
     db_conn: DatabaseConnection,
     jwt: commons::jwt::JWT,
+    aes: commons::aes::Aes,
 }
