@@ -1,17 +1,9 @@
-use serde::Serialize;
+pub mod config;
+pub mod jwt;
 
-mod exception;
-
-#[derive(Debug, Serialize)]
-pub struct ServiceResult<T> {
-    pub data: T,
+#[derive(Debug, Clone)]
+pub struct Error {
     pub message: String,
-    pub status: u16,
-}
-
-#[derive(Debug, Serialize)]
-pub struct ServiceError {
     pub cause: String,
-    pub message: String,
-    pub status: u16,
+    pub status : u16,
 }

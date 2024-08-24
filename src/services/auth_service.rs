@@ -1,14 +1,20 @@
 use sea_orm::ActiveModelTrait;
 
-use crate::requests;
+use crate::{
+    commons, requests,
+    responses::{self},
+};
 
 impl super::AuthService {
-    pub fn new(db_conn: sea_orm::DatabaseConnection) -> Self {
-        Self { db_conn }
+    pub fn new(db_conn: sea_orm::DatabaseConnection, jwt: commons::jwt::JWT) -> Self {
+        Self { db_conn, jwt }
     }
 
-    pub async fn register(&self, request: requests::RegisterRequest) -> super::Result<String> {
-        let result = entities::users::ActiveModel {
+    pub async fn register(
+        &self,
+        request: requests::RegisterRequest,
+    ) -> Result<responses::auth::Auth, commons::Error> {
+        let new_user = entities::users::ActiveModel {
             email: sea_orm::Set(request.email),
             password: sea_orm::Set(request.password),
             updated_at: sea_orm::NotSet,
@@ -16,15 +22,46 @@ impl super::AuthService {
             ..Default::default()
         }
         .insert(&self.db_conn)
-        .await;
+        .await
+        .map_err(|err| commons::Error {
+            status: 500,
+            cause: err.to_string(),
+            message: String::from("failed to register user"),
+        })?;
 
-        return match result {
-            Ok(option) => super::Result::ok(Option::Some(option.id.to_string()))
-                .set_status(201)
-                .set_message(String::from("OK")),
-            Err(err) => super::Result::error(err.to_string())
-                .set_message(String::from("failed to register user"))
-                .set_status(500),
-        };
+        self.generate_auth(responses::auth::User {
+            email: new_user.email,
+            id: new_user.id,
+        })
+    }
+
+    fn generate_auth(
+        &self,
+        user: responses::auth::User,
+    ) -> Result<responses::auth::Auth, commons::Error> {
+        let token = self
+            .jwt
+            .clone()
+            .generate_auth_token(user.clone())
+            .map_err(|err| commons::Error {
+                cause: err.to_string(),
+                message: String::from("failed generate auth token"),
+                status: 500,
+            })?;
+
+        let refresh_token = self
+            .jwt
+            .clone()
+            .generate_refresh_token(user.clone())
+            .map_err(|err| commons::Error {
+                cause: err.to_string(),
+                message: String::from("failed generate refresh token"),
+                status: 500,
+            })?;
+
+        Ok(responses::auth::Auth {
+            refresh_token,
+            token,
+        })
     }
 }

@@ -2,6 +2,7 @@ mod commons;
 mod controllers;
 mod requests;
 mod services;
+mod responses;
 use std::time::Duration;
 
 use actix_web::{middleware::Logger, App, HttpServer};
@@ -11,9 +12,14 @@ use services::AuthService;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    dotenv::dotenv().ok();
     env_logger::init();
+    let config = commons::config::Config::new();
+
+    let jwt = commons::jwt::JWT::new(config.auth_token_secret, config.refresh_token_secret);
+
     let mut opt =
-        ConnectOptions::new("postgres://postgres:postgres@localhost:5432/http_server_rust");
+        ConnectOptions::new(config.db_url);
     opt.max_connections(100)
         .min_connections(5)
         .connect_timeout(Duration::from_secs(8))
@@ -26,8 +32,12 @@ async fn main() -> std::io::Result<()> {
 
     log::info!("db connected");
     HttpServer::new(move || {
-        App::new().wrap(Logger::default())
-            .app_data(actix_web::web::Data::new(AuthService::new(db.clone())))
+        App::new()
+            .wrap(Logger::default())
+            .app_data(actix_web::web::Data::new(AuthService::new(
+                db.clone(),
+                jwt.clone(),
+            )))
             .configure(controllers::auth_controller::config)
     })
     .bind(("127.0.0.1", 8080))?
