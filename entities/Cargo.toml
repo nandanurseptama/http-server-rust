@@ -10,4 +10,4 @@ path = "src/mod.rs"
 
 [dependencies]
 sea-orm = "1.0.0-rc.5"
-serde = { verison = ""1.0.208", features = [ "derive" ] }
+serde = { version = "1.0.208", features = [ "derive" ] }
