@@ -10,20 +10,20 @@ async fn register(
     let result = data.register(req.0).await;
 
     let rest_response = match result {
-        Ok(data) => responses::RestResponse {
+        Ok(data) => responses::RestBody {
             data: Option::Some(data),
             error: Option::<String>::None,
             message: String::from("OK"),
             status: 201,
         },
-        Err(err) => responses::RestResponse {
+        Err(err) => responses::RestBody {
             status: err.status,
             data: Option::None,
             error: Option::<String>::Some(err.cause),
             message: err.message,
         },
     };
-    return super::Response::send_from_rest(rest_response);
+    return responses::Response::send_from_rest(rest_response);
 }
 
 #[post("/login")]
@@ -34,20 +34,20 @@ async fn login(
     let result = data.login(req.0).await;
 
     let rest_response = match result {
-        Ok(data) => responses::RestResponse {
+        Ok(data) => responses::RestBody {
             data: Option::Some(data),
             error: Option::<String>::None,
             message: String::from("OK"),
             status: 200,
         },
-        Err(err) => responses::RestResponse {
+        Err(err) => responses::RestBody {
             status: err.status,
             data: Option::None,
             error: Option::<String>::Some(err.cause),
             message: err.message,
         },
     };
-    return super::Response::send_from_rest(rest_response);
+    return responses::Response::send_from_rest(rest_response);
 }
 pub fn config(config: &mut actix_web::web::ServiceConfig) {
     config.service(

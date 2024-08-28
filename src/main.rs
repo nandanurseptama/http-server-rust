@@ -1,5 +1,6 @@
 mod commons;
 mod controllers;
+mod middlewares;
 mod requests;
 mod responses;
 mod services;
@@ -40,6 +41,7 @@ async fn main() -> std::io::Result<()> {
                 aes.clone(),
             )))
             .configure(controllers::auth_controller::config)
+            .configure(controllers::user_controller::config)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

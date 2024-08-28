@@ -4,6 +4,7 @@ use crate::commons;
 
 mod auth_service;
 
+#[derive(Debug, Clone)]
 /// Handle auth logic
 pub struct AuthService {
     db_conn: DatabaseConnection,

@@ -2,7 +2,10 @@ use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter};
 
 use crate::{
     commons, requests,
-    responses::{self},
+    responses::{
+        self,
+        auth::User,
+    },
 };
 
 impl super::AuthService {
@@ -113,6 +116,34 @@ impl super::AuthService {
         Ok(responses::auth::Auth {
             refresh_token,
             token,
+        })
+    }
+
+    pub async fn auth(self, auth_token: String) -> Result<responses::auth::User, commons::Error> {
+        let user = self
+            .jwt
+            .decode_auth_token::<User>(&auth_token)
+            .map_err(|err| err)?;
+        let find_user = entities::users::Entity::find_by_id(user.id)
+            .one(&self.db_conn)
+            .await
+            .map_err(|err| commons::Error {
+                cause: err.to_string(),
+                message: String::from("failed to authorize user"),
+                status: 500,
+            })?;
+        if find_user.is_none() {
+            return Err(commons::Error {
+                message: String::from("unauthorized"),
+                cause: String::from("user not found in DB"),
+                status: 401,
+            });
+        }
+        let founded_user = find_user.unwrap();
+
+        Ok(responses::auth::User {
+            email: founded_user.email,
+            id: founded_user.id,
         })
     }
 }
